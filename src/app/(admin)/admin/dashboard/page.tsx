@@ -47,7 +47,8 @@ export default async function DashboardPage({
       {/* 2. KEY METRICS */}
       <DashboardStats
         data={{
-          revenue: stats.revenue,
+          // ✅ FIX 3: Convert string/decimal revenue to Number
+          revenue: Number(stats.revenue) || 0,
           orders: stats.ordersCount,
           users: stats.usersCount,
           products: stats.productsCount,
