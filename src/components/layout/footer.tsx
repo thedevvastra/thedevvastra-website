@@ -37,13 +37,14 @@ export async function Footer() {
           {/* --- COLUMN 1: BRAND & SOCIALS --- */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-primary/20">
+              <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20">
                 <Image
-                  src="/dev-vastra-logo.png"
+                  src="/logo.webp"
                   alt="The Dev Vastra"
-                  width={40}
-                  height={40}
-                  className="object-cover"
+                  width={48}
+                  height={48}
+                  className="object-contain"
+              priority
                 />
               </div>
               <span className="text-xl font-bold tracking-tight text-primary">

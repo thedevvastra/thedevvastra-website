@@ -59,13 +59,15 @@ export function DesktopNav({ user, categories }: DesktopNavProps) {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-8">
         {/* Left: Logo */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
-          <div className="relative h-10 w-10 overflow-hidden rounded-full border border-primary/20">
+          <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20">
             <Image
-              src="/dev-vastra-logo.png"
+              src="/logo.webp?v=2"
               alt="Logo"
-              width={40}
-              height={40}
-              className="object-cover"
+              width={48}
+              height={48}
+              className="object-contain"
+              priority
+              unoptimized
             />
           </div>
           <span className="text-xl font-bold tracking-tight text-primary">

@@ -44,13 +44,16 @@ export function MobileNav({ user }: { user: any }) {
           {/* Left: Logo & Name */}
           <div className="flex items-center gap-3">
             <Link href="/" className="shrink-0">
-              <Image
-                src="/dev-vastra-logo.png"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="rounded-full"
-              />
+              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white">
+                <Image
+                  src="/logo.webp"
+                  alt="Logo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                  priority
+                />
+              </div>
             </Link>
             <div className="text-sm font-bold text-primary">The Dev Vastra</div>
           </div>
