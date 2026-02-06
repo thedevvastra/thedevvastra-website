@@ -21,6 +21,8 @@ import {
   updateHeroSlide,
 } from "@/app/(admin)/admin/settings/hero/actions";
 import { cn } from "@/lib/utils";
+// ✅ Import the new component
+import { ImageUpload } from "@/components/ui/image-upload";
 
 interface HeroSlideSheetProps {
   initialData?: any;
@@ -31,7 +33,8 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const { register, handleSubmit, reset, watch } = useForm({
+  // ✅ Added `setValue` to destructuring
+  const { register, handleSubmit, reset, watch, setValue } = useForm({
     defaultValues: initialData || {
       title: "",
       description: "",
@@ -82,10 +85,6 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
         )}
       </SheetTrigger>
 
-      {/* CHANGE: side="bottom" add kiya hai.
-        Styling: Height 90% rakhi hai taaki piche ka background thoda dikhe.
-        Rounded corners sirf upar ke side (rounded-t-xl).
-      */}
       <SheetContent
         side="bottom"
         className="h-[90vh] sm:max-w-4xl mx-auto rounded-t-2xl overflow-y-auto px-4 md:px-10"
@@ -136,12 +135,17 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
                 </div>
               </div>
 
+              {/* ✅ CHANGED: Replaced Text Input with ImageUpload */}
               <div className="space-y-2">
-                <Label>Image URL</Label>
-                <Input {...register("imageUrl")} placeholder="https://..." />
-                <p className="text-xs text-muted-foreground">
-                  Image will load in preview instantly.
-                </p>
+                <Label>Hero Image</Label>
+                <ImageUpload
+                  value={watchedValues.imageUrl}
+                  onChange={(url) => setValue("imageUrl", url)}
+                  onRemove={() => setValue("imageUrl", "")}
+                  bucketName="hero-slides" // Make sure bucket exists in Supabase
+                />
+                {/* Hidden input to ensure validation if needed */}
+                <input type="hidden" {...register("imageUrl")} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -183,12 +187,17 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
                   Live Preview
                 </Label>
 
-                {/* Preview Box - Ab bada aur clear dikhega */}
                 <div
                   className={cn(
                     "relative w-full aspect-video rounded-3xl overflow-hidden border-2 shadow-sm flex flex-col justify-center p-8 transition-all",
                     watchedValues.bgColor,
                   )}
+                  // Support for HEX colors in inline styles if Tailwind class fails
+                  style={
+                    watchedValues.bgColor.startsWith("#")
+                      ? { backgroundColor: watchedValues.bgColor }
+                      : {}
+                  }
                 >
                   {/* Overlay Image */}
                   {watchedValues.imageUrl && (
@@ -200,6 +209,8 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
                       style={{
                         maskImage:
                           "linear-gradient(to right, transparent, black)",
+                        WebkitMaskImage:
+                          "linear-gradient(to right, transparent, black)",
                       }}
                     />
                   )}
@@ -210,6 +221,11 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
                         "text-3xl md:text-4xl font-bold leading-tight mb-3 transition-colors",
                         watchedValues.textColor,
                       )}
+                      style={
+                        watchedValues.textColor.startsWith("#")
+                          ? { color: watchedValues.textColor }
+                          : {}
+                      }
                     >
                       {watchedValues.title || "Your Title Here"}
                     </h1>
@@ -218,6 +234,11 @@ export function HeroSlideSheet({ initialData, children }: HeroSlideSheetProps) {
                         "text-sm md:text-base opacity-90 mb-6 line-clamp-2 transition-colors",
                         watchedValues.textColor,
                       )}
+                      style={
+                        watchedValues.textColor.startsWith("#")
+                          ? { color: watchedValues.textColor }
+                          : {}
+                      }
                     >
                       {watchedValues.description ||
                         "Your description will appear here..."}

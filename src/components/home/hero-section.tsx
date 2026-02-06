@@ -21,7 +21,7 @@ export function HeroSection({ slides }: { slides: any[] }) {
 
   return (
     <section className="w-full py-6 overflow-hidden bg-background">
-      <div className="container mx-auto px-4 h-[350px] md:h-[480px] flex gap-4">
+      <div className="container mx-auto px-4 h-[200px] md:h-[380px] flex gap-4">
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
           const isNext = index === (activeIndex + 1) % slides.length;
