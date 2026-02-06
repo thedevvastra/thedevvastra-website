@@ -9,12 +9,13 @@ import {
   Heart,
   Package,
   MapPin,
-  LogOut,
   ShieldCheck,
   ChevronRight,
   Settings,
 } from "lucide-react";
 import { GreetingHeader } from "@/components/account/greeting-header";
+// ✅ Import the new Client Component
+import { LogoutButton } from "@/components/account/logout-button";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -100,9 +101,9 @@ export default async function AccountPage() {
           </Link>
         )}
 
-        {/* General Settings (Placeholder for future) */}
+        {/* General Settings */}
         <Link
-          href="/settings" // Future page
+          href="/settings"
           className="flex items-center justify-between p-3.5 hover:bg-muted/40 transition-colors"
         >
           <div className="flex items-center gap-3">
@@ -115,14 +116,9 @@ export default async function AccountPage() {
         </Link>
       </div>
 
-      {/* 4. Logout Button */}
+      {/* 4. Logout Button (New Client Component) */}
       <div className="mt-4">
-        <form action="/auth/signout" method="post">
-          <button className="w-full flex items-center justify-center gap-2 p-3 text-red-600 bg-red-50/50 hover:bg-red-50 border border-red-100 rounded-xl transition-all text-sm font-medium">
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
-        </form>
+        <LogoutButton />
       </div>
 
       <div className="h-20 md:hidden" />
