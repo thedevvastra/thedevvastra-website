@@ -10,13 +10,15 @@ import {
   storeSettings,
   orders,
   orderItems,
+  coupons, // ✅ Import Coupons
 } from "@/db/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import Razorpay from "razorpay";
 import crypto from "crypto";
-// ✅ IMPORT TELEGRAM UTILITY
 import { sendTelegramNotification } from "@/lib/telegram";
+// ✅ Import Verify Logic from Admin Actions
+import { verifyCouponCode } from "@/app/(admin)/admin/coupons/actions";
 
 // ✅ HELPER: Initialize Razorpay safely
 function getRazorpay() {
@@ -36,7 +38,7 @@ function getRazorpay() {
   });
 }
 
-// 1. Get Cart Data
+// 1. Get Cart Data (Updated to fetch Available Coupons)
 export async function getCartData() {
   const supabase = await createClient();
   const {
@@ -73,7 +75,14 @@ export async function getCartData() {
     shippingDuration: "5-7 Days",
   };
 
-  return { cartItems, userProfile, settings };
+  // ✅ Fetch Active Coupons (Public) for Suggestions
+  const availableCoupons = await db.query.coupons.findMany({
+    where: eq(coupons.isActive, true), // Removed targetType filter
+    limit: 10,
+    orderBy: desc(coupons.createdAt),
+  });
+
+  return { cartItems, userProfile, settings, availableCoupons };
 }
 
 // 2. Update Quantity
@@ -133,13 +142,86 @@ export async function saveUserAddress(data: any) {
   revalidatePath("/cart");
 }
 
-// 6. Create Razorpay Order
-export async function createRazorpayOrder(amount: number) {
+// ✅ HELPER: Calculate Final Amount Server-Side (Security)
+async function calculateCartTotal(userId: string, couponCode?: string) {
+  // Fetch Cart
+  const cartItems = await db
+    .select({
+      quantity: carts.quantity,
+      product: products,
+    })
+    .from(carts)
+    .innerJoin(products, eq(carts.productId, products.id))
+    .where(eq(carts.userId, userId));
+
+  if (cartItems.length === 0) return { error: "Cart is empty" };
+
+  // Fetch Settings
+  const settings = await db.query.storeSettings.findFirst({
+    where: eq(storeSettings.id, 1),
+  });
+
+  // Basic Totals
+  const subtotal = cartItems.reduce(
+    (acc, item) => acc + item.product.sellingPrice * item.quantity,
+    0,
+  );
+
+  const shippingCharge = settings?.shippingCharge || 0;
+  const freeThreshold = settings?.freeShippingThreshold || 0;
+  const isFreeShipping = freeThreshold > 0 && subtotal >= freeThreshold;
+  const finalShipping = isFreeShipping ? 0 : shippingCharge;
+
+  let discountAmount = 0;
+  let finalCouponCode = null;
+
+  // Coupon Logic
+  if (couponCode) {
+    // Re-construct cart items format for verify function
+    const formattedCart = cartItems.map((item) => ({
+      product: item.product,
+      quantity: item.quantity,
+    }));
+
+    const verifyRes = await verifyCouponCode(
+      couponCode,
+      subtotal,
+      formattedCart,
+    );
+    if (verifyRes.success) {
+      discountAmount = verifyRes.discountAmount || 0;
+      finalCouponCode = verifyRes.code;
+    }
+  }
+
+  const totalAmount = subtotal + finalShipping - discountAmount;
+
+  return {
+    totalAmount,
+    discountAmount,
+    couponCode: finalCouponCode,
+    subtotal,
+    cartItems,
+  };
+}
+
+// 6. Create Razorpay Order (Updated for Coupons)
+export async function createRazorpayOrder(couponCode?: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Unauthorized" };
+
   try {
+    // ✅ Calculate Total securely on server
+    const calc = await calculateCartTotal(user.id, couponCode);
+    if ("error" in calc) return { error: calc.error };
+
     const razorpay = getRazorpay();
 
     const options = {
-      amount: Math.round(amount * 100), // Amount in paise
+      amount: Math.round(calc.totalAmount * 100), // Amount in paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     };
@@ -151,12 +233,13 @@ export async function createRazorpayOrder(amount: number) {
   }
 }
 
-// 7. Place Order
+// 7. Place Order (Updated for Coupons)
 export async function placeOrder(paymentData: {
   method: "COD" | "ONLINE";
   razorpayPaymentId?: string;
   razorpayOrderId?: string;
   razorpaySignature?: string;
+  couponCode?: string; // ✅ New Param
 }) {
   const supabase = await createClient();
   const {
@@ -166,6 +249,17 @@ export async function placeOrder(paymentData: {
   if (!user) return { error: "Please login to place order" };
 
   try {
+    // ✅ 1. Re-Calculate Everything Securely
+    const calc = await calculateCartTotal(user.id, paymentData.couponCode);
+    if ("error" in calc) return { error: calc.error };
+
+    const {
+      totalAmount,
+      discountAmount,
+      couponCode,
+      cartItems: cartData,
+    } = calc;
+
     // Verify Payment if ONLINE
     if (paymentData.method === "ONLINE") {
       const { razorpayOrderId, razorpayPaymentId, razorpaySignature } =
@@ -189,21 +283,6 @@ export async function placeOrder(paymentData: {
       }
     }
 
-    // Fetch Cart
-    const cartData = await db
-      .select({
-        id: carts.id,
-        quantity: carts.quantity,
-        size: carts.size,
-        color: carts.color,
-        product: products,
-      })
-      .from(carts)
-      .innerJoin(products, eq(carts.productId, products.id))
-      .where(eq(carts.userId, user.id));
-
-    if (cartData.length === 0) return { error: "Cart is empty" };
-
     const userProfile = await db.query.profiles.findFirst({
       where: eq(profiles.id, user.id),
     });
@@ -212,23 +291,8 @@ export async function placeOrder(paymentData: {
       return { error: "Please add delivery address first" };
     }
 
-    const settings = await db.query.storeSettings.findFirst({
-      where: eq(storeSettings.id, 1),
-    });
-
-    // Calculate Totals
-    const subtotal = cartData.reduce(
-      (acc, item) => acc + item.product.sellingPrice * item.quantity,
-      0,
-    );
-    const shippingCharge = settings?.shippingCharge || 0;
-    const freeThreshold = settings?.freeShippingThreshold || 0;
-    const isFreeShipping = freeThreshold > 0 && subtotal >= freeThreshold;
-    const finalShipping = isFreeShipping ? 0 : shippingCharge;
-    const totalAmount = subtotal + finalShipping;
-
     const displayId = `#ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-    let createdOrderId: string | null = null; // ✅ To store new Order ID
+    let createdOrderId: string | null = null;
 
     await db.transaction(async (tx) => {
       const [newOrder] = await tx
@@ -237,6 +301,12 @@ export async function placeOrder(paymentData: {
           userId: user.id,
           displayId: displayId,
           totalAmount: totalAmount,
+
+          // ✅ Save Coupon Info
+          couponCode: couponCode,
+          discountAmount: discountAmount,
+          finalAmount: totalAmount, // Redundant but good for history
+
           status: "Order Placed",
           shippingAddress: {
             name: userProfile.fullName,
@@ -253,7 +323,7 @@ export async function placeOrder(paymentData: {
         })
         .returning({ id: orders.id });
 
-      createdOrderId = newOrder.id; // ✅ Capture ID
+      createdOrderId = newOrder.id;
 
       for (const item of cartData) {
         await tx.insert(orderItems).values({
@@ -261,8 +331,8 @@ export async function placeOrder(paymentData: {
           productId: item.product.id,
           quantity: item.quantity,
           price: item.product.sellingPrice,
-          size: item.size,
-          color: item.color,
+          size: (item as any).size, // Type casting safe here based on query
+          color: (item as any).color,
         });
 
         await tx
@@ -271,10 +341,16 @@ export async function placeOrder(paymentData: {
           .where(eq(products.id, item.product.id));
       }
 
+      // ✅ Update Coupon Usage Count
+      if (couponCode) {
+        await tx.execute(
+          sql`UPDATE coupons SET usage_count = usage_count + 1 WHERE code = ${couponCode}`,
+        );
+      }
+
       await tx.delete(carts).where(eq(carts.userId, user.id));
     });
 
-    // ✅ SEND NOTIFICATION (Non-blocking)
     if (createdOrderId) {
       sendTelegramNotification(createdOrderId);
     }

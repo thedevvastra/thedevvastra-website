@@ -7,17 +7,24 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 export function HeroSection({ slides }: { slides: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  if (!slides || slides.length === 0) return null;
-
+  // ✅ FIX: Moved useEffect ABOVE the early return
   useEffect(() => {
+    // Guard clause inside the effect instead
+    if (!slides || slides.length === 0) return;
+
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [activeIndex, slides.length]);
+  }, [activeIndex, slides]); // Changed dependency to 'slides' to be safe
+
+  // ✅ FIX: Early return happens AFTER all hooks are declared
+  if (!slides || slides.length === 0) return null;
 
   return (
     <section className="w-full py-6 overflow-hidden bg-background">
@@ -37,25 +44,20 @@ export function HeroSection({ slides }: { slides: any[] }) {
                 opacity: isActive || isNext ? 1 : 0.5,
               }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
-              // ✅ Added 'group' class for hover effect on image
               className={cn(
                 "relative h-full rounded-3xl overflow-hidden cursor-pointer shadow-sm border border-border/50 group",
                 slide.bgColor,
                 !isActive && "hidden md:block",
               )}
             >
-              {/* ✅ FIX: Image Visibility Improved */}
               {slide.imageUrl && (
                 <>
-                  {/* 1. Actual Image (Removed low opacity and blend mode) */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={slide.imageUrl}
                     alt={slide.title}
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  {/* 2. Gradient Overlay so text is readable on bright images */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 </>
               )}
 

@@ -19,19 +19,16 @@ export default async function CartPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect if not logged in
   if (!user) {
     redirect("/login?next=/cart");
   }
 
-  // Fetch Data
   const data = await getCartData();
 
   if (!data) return null;
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-[70vh]">
-      {/* Page Header */}
       <div className="flex items-center gap-3 border-b pb-6 mb-8">
         <div className="p-2 bg-primary/10 rounded-lg">
           <ShoppingBag className="h-6 w-6 text-primary" />
@@ -42,12 +39,12 @@ export default async function CartPage() {
         </span>
       </div>
 
-      {/* Main Content */}
-      {/* ✅ FIX: 'settings' prop pass kiya */}
+      {/* ✅ FIX: Passing availableCoupons */}
       <CartClient
         cartItems={data.cartItems}
         userProfile={data.userProfile}
         settings={data.settings}
+        availableCoupons={data.availableCoupons}
       />
     </div>
   );

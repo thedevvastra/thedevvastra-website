@@ -11,10 +11,10 @@ import {
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogAction,
-  AlertDialogCancel, // Needed for Delete Dialog
-  AlertDialogHeader, // ✅ Added
-  AlertDialogTitle, // ✅ Added
-  AlertDialogDescription, // ✅ Added
+  AlertDialogCancel,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
@@ -30,12 +30,14 @@ interface CartClientProps {
   cartItems: any[];
   userProfile: any;
   settings: any;
+  availableCoupons: any[]; // ✅ FIX: Added Prop
 }
 
 export function CartClient({
   cartItems,
   userProfile,
   settings,
+  availableCoupons, // ✅ FIX: Destructured Prop
 }: CartClientProps) {
   const [isPending, startTransition] = useTransition();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -173,21 +175,19 @@ export function CartClient({
             cartItems={cartItems}
             userProfile={userProfile}
             settings={settings}
+            availableCoupons={availableCoupons} // ✅ FIX: Passed Prop
             onOrderSuccess={handleOrderSuccess}
           />
         </div>
       </div>
 
-      {/* ✅ UPGRADED SUCCESS MODAL (FIXED ACCESSIBILITY ERROR) */}
+      {/* SUCCESS MODAL */}
       <AlertDialog open={!!orderSuccessId}>
         <AlertDialogContent className="max-w-md p-0 overflow-hidden border-0 rounded-2xl shadow-2xl">
-          {/* Header Graphic */}
           <div className="bg-gradient-to-b from-green-50 to-white pt-10 pb-6 px-6 flex flex-col items-center text-center">
             <div className="h-24 w-24 bg-green-100 rounded-full flex items-center justify-center shadow-sm animate-in zoom-in duration-300 ring-8 ring-green-50 mb-4">
               <CheckCircle2 className="h-12 w-12 text-green-600" />
             </div>
-
-            {/* ✅ FIX: Wrapped in AlertDialogHeader & used Title/Description */}
             <AlertDialogHeader className="space-y-2">
               <AlertDialogTitle className="text-2xl font-bold text-foreground text-center">
                 Order Placed Successfully!
@@ -199,7 +199,6 @@ export function CartClient({
             </AlertDialogHeader>
           </div>
 
-          {/* Order Details Body */}
           <div className="px-6 pb-8 space-y-6 bg-white">
             <div className="bg-muted/30 border border-dashed border-muted-foreground/30 p-4 rounded-xl flex flex-col items-center gap-2">
               <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
@@ -239,7 +238,7 @@ export function CartClient({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* DELETE DIALOG (FIXED STRUCTURE) */}
+      {/* DELETE DIALOG */}
       <AlertDialog
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}

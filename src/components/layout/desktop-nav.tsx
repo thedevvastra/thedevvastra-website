@@ -21,6 +21,7 @@ import { getUserCounts } from "@/app/(shop)/actions";
 import { getContactSettings } from "@/app/(admin)/admin/settings/contact/actions";
 import { useRouter } from "next/navigation";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
 interface DesktopNavProps {
   user: any;
   categories: any[];
@@ -57,8 +58,9 @@ export function DesktopNav({ user, categories }: DesktopNavProps) {
     <header className="hidden md:block w-full border-b bg-card sticky top-0 z-50">
       {/* --- TOP ROW: Logo, Search, Icons --- */}
       <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-8">
-        {/* Left: Logo */}
+        {/* Left: Logo Area */}
         <Link href="/" className="flex items-center gap-3 shrink-0">
+          {/* Round Icon Logo */}
           <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20">
             <Image
               src="/logo.webp?v=2"
@@ -70,9 +72,19 @@ export function DesktopNav({ user, categories }: DesktopNavProps) {
               unoptimized
             />
           </div>
-          <span className="text-xl font-bold tracking-tight text-primary">
-            The Dev Vastra
-          </span>
+
+          {/* ✅ FIX: Replaced Text with Brand Image */}
+          {/* Make sure to upload 'brand-text.png' in public folder */}
+          <div className="relative h-10 w-48">
+            <Image
+              src="/text-logo.webp" // Yahan apni text wali image ka naam likhein
+              alt="The Dev Vastra"
+              fill
+              className="object-contain object-left" // object-left se logo ke paas chipak ke rahega
+              priority
+              unoptimized
+            />
+          </div>
         </Link>
 
         {/* Center: Search Bar */}
@@ -80,8 +92,7 @@ export function DesktopNav({ user, categories }: DesktopNavProps) {
           <Input
             placeholder="Search for any product or brand..."
             className="w-full h-11 pl-5 pr-12 rounded-full border-primary/20 bg-background/50 focus-visible:ring-primary/30 transition-all cursor-text"
-            // ✅ Add these event handlers
-            readOnly // Mobile behaviour avoid karne ke liye readOnly rakh sakte hain ya direct onClick
+            readOnly
             onClick={() => router.push("/search")}
             onFocus={() => router.push("/search")}
           />

@@ -3,6 +3,7 @@ export interface BuyNowProduct {
   title: string;
   price: number;
   image?: string;
+  sellingPrice: number; // ✅ Ensure sellingPrice is available
 }
 
 export interface BuyNowSelection {
@@ -26,4 +27,13 @@ export interface BuyNowModalProps {
   product: BuyNowProduct;
   selection: BuyNowSelection;
   onOrderSuccess: (orderId: string) => void;
+}
+
+export interface CouponData {
+  id: string;
+  code: string;
+  discountType: "FLAT" | "PERCENTAGE";
+  discountValue: number;
+  minOrderValue: number;
+  targetType: "ALL" | "SPECIFIC";
 }

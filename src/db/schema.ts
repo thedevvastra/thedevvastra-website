@@ -240,7 +240,7 @@ export const reviews = pgTable("reviews", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// ✅ NEW: RELATIONS
+// RELATIONS
 export const reviewsRelations = relations(reviews, ({ one }) => ({
   user: one(profiles, {
     fields: [reviews.userId],
@@ -251,6 +251,30 @@ export const reviewsRelations = relations(reviews, ({ one }) => ({
     references: [products.id],
   }),
 }));
+
+// COUPONS
+export const coupons = pgTable("coupons", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  code: text("code").notNull().unique(), // e.g. "WELCOME50"
+  description: text("description"), // e.g. "Get 50% off on Shoes"
+
+  discountType: text("discount_type").default("FLAT").notNull(), // 'FLAT' or 'PERCENTAGE'
+  discountValue: integer("discount_value").notNull(), // Amount (e.g. 100) or Percent (e.g. 10)
+
+  minOrderValue: integer("min_order_value").default(0), // Min cart value req
+  maxDiscountAmount: integer("max_discount_amount"), // Max cap for % off (e.g. Max Rs 500 off)
+
+  targetType: text("target_type").default("ALL").notNull(), // 'ALL' or 'SPECIFIC'
+  specificProductIds: json("specific_product_ids").$type<string[]>(), // IDs array if specific
+
+  isActive: boolean("is_active").default(true),
+  expiresAt: timestamp("expires_at"), // Expiry Date
+
+  usageLimit: integer("usage_limit"), // Total times coupon can be used
+  usageCount: integer("usage_count").default(0), // Times used so far
+
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // 5. ORDERS
 export const orders = pgTable("orders", {
@@ -267,6 +291,10 @@ export const orders = pgTable("orders", {
   cancelReason: text("cancel_reason"),
 
   totalAmount: integer("total_amount").notNull(),
+
+  couponCode: text("coupon_code"), // Jo code use kiya
+  discountAmount: integer("discount_amount").default(0), // Kitna discount mila
+  finalAmount: integer("final_amount"), // Total - Discount (Backup field)
 
   // Address ka snapshot (Taaki future mein user address change kare to purana order affect na ho)
   shippingAddress: json("shipping_address").notNull(),

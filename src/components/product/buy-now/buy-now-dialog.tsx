@@ -4,24 +4,23 @@ import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import * as VisuallyHidden from "@radix-ui/react-visually-hidden";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { getUserAddress } from "@/app/(shop)/product/actions";
-import { BuyNowModalProps, AddressData } from "./types";
+import { getBuyNowInitData } from "@/app/(shop)/product/actions"; // ✅ Updated Import
+import { BuyNowModalProps, AddressData, CouponData } from "./types";
 
-// Import Steps
 import { AddressStep } from "./address-step";
 import { PaymentStep } from "./payment-step";
-// SuccessStep import ki zaroorat nahi yahan
 
 export function BuyNowDialog({
   isOpen,
   onClose,
   product,
   selection,
-  onOrderSuccess, // Received from Parent
+  onOrderSuccess,
 }: BuyNowModalProps) {
   const [step, setStep] = useState<"LOADING" | "ADDRESS" | "PAYMENT">(
     "LOADING",
   );
+
   const [addressData, setAddressData] = useState<AddressData>({
     fullName: "",
     phone: "",
@@ -31,15 +30,21 @@ export function BuyNowDialog({
     zipCode: "",
   });
   const [hasSavedAddress, setHasSavedAddress] = useState(false);
+  const [coupons, setCoupons] = useState<CouponData[]>([]); // ✅ Store Coupons
 
-  const fetchAddress = async () => {
-    const res = await getUserAddress();
-    if (res.success && res.address) {
-      setAddressData(res.address as AddressData);
-      setHasSavedAddress(res.hasAddress);
+  const fetchData = async () => {
+    const res = await getBuyNowInitData(); // ✅ Fetch Address + Coupons
+    if (res.success) {
+      if (res.address) {
+        setAddressData(res.address as AddressData);
+        setHasSavedAddress(res.hasAddress);
+      }
+      if (res.availableCoupons) {
+        /* eslint-disable  @typescript-eslint/no-explicit-any */
+        setCoupons(res.availableCoupons as any); // ✅ Set Coupons
+      }
       setStep(res.hasAddress ? "PAYMENT" : "ADDRESS");
     } else {
-      setHasSavedAddress(false);
       setStep("ADDRESS");
     }
   };
@@ -47,7 +52,7 @@ export function BuyNowDialog({
   useEffect(() => {
     if (isOpen) {
       setStep("LOADING");
-      fetchAddress();
+      fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -92,8 +97,9 @@ export function BuyNowDialog({
             product={product}
             selection={selection}
             address={addressData}
+            availableCoupons={coupons} // ✅ Pass Coupons
             onChangeAddress={() => setStep("ADDRESS")}
-            onSuccess={onOrderSuccess} // ✅ Pass Handler
+            onSuccess={onOrderSuccess}
             onClose={onClose}
           />
         )}

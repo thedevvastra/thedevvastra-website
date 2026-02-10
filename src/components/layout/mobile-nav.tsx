@@ -18,6 +18,8 @@ import { useShopStore } from "@/store/cart-store";
 import { getUserCounts } from "@/app/(shop)/actions";
 import { useRouter } from "next/navigation";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 export function MobileNav({ user }: { user: any }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -41,22 +43,32 @@ export function MobileNav({ user }: { user: any }) {
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-md z-50 px-4 py-3 shadow-sm border-b border-border/40">
         {/* Header Row: Logo + Title + Wishlist Icon */}
         <div className="flex items-center justify-between mb-3">
-          {/* Left: Logo & Name */}
-          <div className="flex items-center gap-3">
-            <Link href="/" className="shrink-0">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white">
-                <Image
-                  src="/logo.webp"
-                  alt="Logo"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                  priority
-                />
-              </div>
-            </Link>
-            <div className="text-sm font-bold text-primary">The Dev Vastra</div>
-          </div>
+          {/* Left: Logo & Name (Clickable) */}
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            {/* Round Icon */}
+            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white">
+              <Image
+                src="/logo.webp"
+                alt="Logo"
+                width={56}
+                height={56}
+                className="object-contain"
+                priority
+              />
+            </div>
+
+            {/* ✅ FIX: Replaced Text with Brand Image */}
+            <div className="relative h-8 w-36">
+              <Image
+                src="/text-logo.webp" // Ensure this file exists in public folder
+                alt="The Dev Vastra"
+                fill
+                className="object-contain object-left"
+                priority
+                unoptimized
+              />
+            </div>
+          </Link>
 
           {/* Right: Wishlist Icon with Badge */}
           <Link href="/wishlist" className="relative p-1">

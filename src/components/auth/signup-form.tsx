@@ -35,19 +35,23 @@ export function SignupForm() {
 
   const onSubmit = async (data: z.infer<typeof signupSchema>) => {
     setIsLoading(true);
+    const loadingToast = toast.loading("Creating account...");
+
     const res = await signupAction(data);
-    setIsLoading(false);
 
     if (res.error) {
+      setIsLoading(false);
+      toast.dismiss(loadingToast);
       toast.error(res.error);
     } else {
-      toast.success("Account Created Successfully!");
-      // Agar Supabase mein 'Confirm Email' on hai to user ko batana padega
-      // router.push("/verify-email"); // Optional: if using email verification
+      toast.dismiss(loadingToast);
+      toast.success("Welcome! Account created successfully.");
 
-      // Direct login flow
-      router.push("/");
+      // ✅ FIX: Mobile Redirect Logic
       router.refresh();
+      setTimeout(() => {
+        router.replace("/");
+      }, 500);
     }
   };
 
@@ -66,6 +70,7 @@ export function SignupForm() {
             id="fullName"
             placeholder="John Doe"
             className="pl-9 h-10"
+            disabled={isLoading}
           />
         </div>
         {errors.fullName && (
@@ -84,6 +89,7 @@ export function SignupForm() {
             type="email"
             placeholder="john@example.com"
             className="pl-9 h-10"
+            disabled={isLoading}
           />
         </div>
         {errors.email && (
@@ -102,6 +108,7 @@ export function SignupForm() {
             type="tel"
             placeholder="9876543210"
             className="pl-9 h-10"
+            disabled={isLoading}
           />
         </div>
         {errors.phone && (
@@ -120,6 +127,7 @@ export function SignupForm() {
             type="password"
             placeholder="******"
             className="pl-9 h-10"
+            disabled={isLoading}
           />
         </div>
         {errors.password && (

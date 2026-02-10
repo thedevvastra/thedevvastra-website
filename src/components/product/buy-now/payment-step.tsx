@@ -2,11 +2,20 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Loader2, CreditCard, Banknote, MapPin } from "lucide-react";
+import {
+  Loader2,
+  CreditCard,
+  Banknote,
+  MapPin,
+  TicketPercent,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import {
   DialogHeader,
   DialogTitle,
@@ -17,12 +26,19 @@ import {
   createDirectOrder,
   verifyDirectPayment,
 } from "@/app/(shop)/product/actions";
-import { BuyNowProduct, BuyNowSelection, AddressData } from "./types";
+import { verifyCouponCode } from "@/app/(admin)/admin/coupons/actions";
+import {
+  BuyNowProduct,
+  BuyNowSelection,
+  AddressData,
+  CouponData,
+} from "./types";
 
 interface PaymentStepProps {
   product: BuyNowProduct;
   selection: BuyNowSelection;
   address: AddressData;
+  availableCoupons: CouponData[];
   onChangeAddress: () => void;
   onSuccess: (orderId: string) => void;
   onClose: () => void;
@@ -42,13 +58,67 @@ export function PaymentStep({
   product,
   selection,
   address,
+  availableCoupons,
   onChangeAddress,
-  onSuccess, // This comes from Parent (ProductInfo)
+  onSuccess,
   onClose,
 }: PaymentStepProps) {
   const [paymentMethod, setPaymentMethod] = useState("Online");
   const [isProcessing, setIsProcessing] = useState(false);
-  const totalAmount = product.price * selection.quantity;
+
+  // --- COUPON STATE ---
+  const [couponCode, setCouponCode] = useState("");
+  const [verifyingCoupon, setVerifyingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discountAmount: number;
+  } | null>(null);
+
+  // ✅ FIX 1: NaN Issue - Robust Price Calculation
+  // Agar sellingPrice undefined hai to price use karo, warna 0
+  const effectivePrice = product.sellingPrice ?? product.price ?? 0;
+  const baseAmount = effectivePrice * selection.quantity;
+
+  // Final Amount (After Discount)
+  const totalAmount = Math.max(
+    0,
+    baseAmount - (appliedCoupon?.discountAmount || 0),
+  );
+
+  // --- HANDLERS ---
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setVerifyingCoupon(true);
+
+    // Mock cart format for verification
+    const mockCart = [
+      {
+        product: { id: product.id, sellingPrice: effectivePrice }, // Use effectivePrice
+        quantity: selection.quantity,
+      },
+    ];
+
+    const res = await verifyCouponCode(couponCode, baseAmount, mockCart);
+    setVerifyingCoupon(false);
+
+    if (res.error) {
+      toast.error(res.error);
+      setAppliedCoupon(null);
+    } else {
+      toast.success(res.message);
+      setAppliedCoupon({
+        // ✅ FIX 2: TS Error - Fallback to empty string
+        code: res.code || "",
+        discountAmount: res.discountAmount || 0,
+      });
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    toast.info("Coupon removed");
+  };
 
   const handleProceed = async () => {
     setIsProcessing(true);
@@ -59,7 +129,7 @@ export function PaymentStep({
       color: selection.color || undefined,
       size: selection.size || undefined,
       paymentMethod,
-      totalAmount,
+      couponCode: appliedCoupon?.code,
     });
 
     if (!res.success || !res.orderId) {
@@ -68,14 +138,14 @@ export function PaymentStep({
       return;
     }
 
-    // --- COD FLOW ---
+    // COD FLOW
     if (paymentMethod === "COD") {
-      onClose(); // ✅ Close BuyNow Modal First
-      onSuccess(res.displayId!); // ✅ Open Success Modal
+      onClose();
+      onSuccess(res.displayId!);
       return;
     }
 
-    // --- RAZORPAY FLOW ---
+    // RAZORPAY FLOW
     const isScriptLoaded = await loadRazorpayScript();
     if (!isScriptLoaded) {
       setIsProcessing(false);
@@ -90,8 +160,8 @@ export function PaymentStep({
       name: "The Dev Vastra",
       description: "Order Payment",
       order_id: res.razorpayOrderId,
+      /* eslint-disable  @typescript-eslint/no-explicit-any */
       handler: async function (response: any) {
-        // Verify on Backend
         const verifyRes = await verifyDirectPayment({
           orderId: res.orderId!,
           razorpayPaymentId: response.razorpay_payment_id,
@@ -100,7 +170,7 @@ export function PaymentStep({
         });
 
         if (verifyRes.success) {
-          onSuccess(res.displayId!); // ✅ Payment Verified -> Open Success Modal
+          onSuccess(res.displayId!);
         } else {
           toast.error("Payment Verification Failed");
         }
@@ -115,12 +185,9 @@ export function PaymentStep({
       },
     };
 
+    /* eslint-disable  @typescript-eslint/no-explicit-any */
     const rzp1 = new (window as any).Razorpay(options);
-
-    // ✅ CRITICAL FIX: Razorpay khulne se PEHLE BuyNow Dialog close kar do
-    // Isse Focus Trap aur Interaction ka issue solve ho jayega.
     onClose();
-
     rzp1.open();
   };
 
@@ -143,7 +210,7 @@ export function PaymentStep({
         <DialogDescription>Confirm details and pay.</DialogDescription>
       </DialogHeader>
 
-      <div className="p-6 pt-2 space-y-6">
+      <div className="p-6 pt-2 space-y-6 overflow-y-auto max-h-[60vh]">
         {/* Address Preview */}
         <div className="rounded-lg border bg-muted/30 p-3 flex items-start gap-3">
           <div className="bg-white p-2 rounded-full border shadow-sm">
@@ -187,11 +254,109 @@ export function PaymentStep({
           <div className="flex-1">
             <p className="font-medium text-sm line-clamp-1">{product.title}</p>
             <p className="text-xs text-muted-foreground">
-              Qty: {selection.quantity} | Total:{" "}
-              <span className="text-primary font-bold">
-                ₹{totalAmount.toLocaleString()}
-              </span>
+              Qty: {selection.quantity}
             </p>
+          </div>
+          <div className="text-right">
+            {/* ✅ Display Calculated Base Amount */}
+            <span className="text-sm font-bold">
+              ₹{baseAmount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+
+        {/* ✅ COUPON SECTION */}
+        <div className="space-y-3">
+          <Label className="text-xs uppercase text-muted-foreground font-bold tracking-wider">
+            Coupon Code
+          </Label>
+
+          {appliedCoupon ? (
+            // Applied State
+            <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+              <div className="flex items-center gap-2">
+                <TicketPercent className="h-5 w-5" />
+                <div>
+                  <p className="text-sm font-bold">{appliedCoupon.code}</p>
+                  <p className="text-[10px]">Discount Applied</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="font-bold">
+                  -₹{appliedCoupon.discountAmount}
+                </span>
+                <button
+                  onClick={handleRemoveCoupon}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Input State
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter Code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                  className="uppercase h-10"
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleApplyCoupon}
+                  disabled={verifyingCoupon || !couponCode}
+                  className="h-10"
+                >
+                  {verifyingCoupon ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    "Apply"
+                  )}
+                </Button>
+              </div>
+
+              {/* Available Coupons Chips */}
+              {availableCoupons && availableCoupons.length > 0 && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-[10px] text-muted-foreground font-semibold">
+                    Available Offers:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {availableCoupons.map((c) => (
+                      <div
+                        key={c.id}
+                        onClick={() => setCouponCode(c.code)}
+                        className="cursor-pointer group flex items-center gap-2 px-2 py-1.5 rounded-md border border-dashed border-primary/40 bg-primary/5 hover:bg-primary/10 transition-colors"
+                      >
+                        <TicketPercent className="h-3 w-3 text-primary" />
+                        <span className="font-bold text-xs text-primary uppercase">
+                          {c.code}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Total Summary */}
+        <div className="flex justify-between items-center">
+          <span className="font-bold text-lg">Total Amount</span>
+          <div className="text-right">
+            {appliedCoupon && (
+              <p className="text-xs text-muted-foreground line-through decoration-red-500">
+                ₹{baseAmount.toLocaleString()}
+              </p>
+            )}
+            <span className="font-bold text-2xl text-primary">
+              ₹{totalAmount.toLocaleString()}
+            </span>
           </div>
         </div>
 
@@ -254,9 +419,9 @@ export function PaymentStep({
           {isProcessing ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : paymentMethod === "Online" ? (
-            "Proceed to Pay"
+            `Pay ₹${totalAmount.toLocaleString()}`
           ) : (
-            "Place Order"
+            `Place Order • ₹${totalAmount.toLocaleString()}`
           )}
         </Button>
       </DialogFooter>
