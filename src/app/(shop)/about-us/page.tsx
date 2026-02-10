@@ -25,6 +25,8 @@ export const metadata = {
     "Discover the story behind The Dev Vastra. Where tradition meets modern elegance.",
 };
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 export default function AboutUsPage() {
   return (
     <div className="bg-background min-h-screen">
@@ -56,14 +58,14 @@ export default function AboutUsPage() {
           <div className="relative group">
             <div className="relative h-[300px] md:h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-border/50 bg-muted">
               <Image
-                src="/about-story.jpg"
+                src="/about-us-image.webp"
                 alt="Our Studio"
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center -z-10 text-muted-foreground bg-secondary/30">
                 <span className="text-sm font-medium">
-                  Add 'about-story.jpg' to public folder
+                  Add 'about-story.webp' to public folder
                 </span>
               </div>
             </div>
@@ -341,7 +343,7 @@ export default function AboutUsPage() {
 
           <div className="mt-6 flex flex-col items-center">
             <div className="font-bold text-sm">The Founders</div>
-            <div className="text-xs opacity-75">The Dev Vastra Team</div>
+            <div className="text-xs opacity-75">Devesh Sisodiya</div>
           </div>
         </div>
       </section>
