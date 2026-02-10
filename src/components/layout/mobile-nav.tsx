@@ -25,10 +25,8 @@ export function MobileNav({ user }: { user: any }) {
   const pathname = usePathname();
   const isActive = (path: string) => pathname === path;
 
-  // ✅ Connect to Global Store for Real-time updates
   const { cartCount, wishlistCount, setCounts } = useShopStore();
 
-  // ✅ Initial Sync on Load
   useEffect(() => {
     if (user) {
       getUserCounts().then((data) => {
@@ -41,12 +39,11 @@ export function MobileNav({ user }: { user: any }) {
     <div className="md:hidden">
       {/* --- TOP BAR (Fixed) --- */}
       <div className="fixed top-0 left-0 right-0 bg-card/95 backdrop-blur-md z-50 px-4 py-3 shadow-sm border-b border-border/40">
-        {/* Header Row: Logo + Title + Wishlist Icon */}
-        <div className="flex items-center justify-between mb-3">
-          {/* Left: Logo & Name (Clickable) */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            {/* Round Icon */}
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white">
+        {/* ✅ FIX: Header Layout (Left-Center-Right) */}
+        <div className="relative flex items-center justify-between mb-3">
+          {/* 1. Left: Round Logo Only */}
+          <Link href="/" className="shrink-0 z-10">
+            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white shadow-sm">
               <Image
                 src="/logo.webp"
                 alt="Logo"
@@ -56,23 +53,27 @@ export function MobileNav({ user }: { user: any }) {
                 priority
               />
             </div>
-
-            {/* ✅ FIX: Replaced Text with Brand Image */}
-            <div className="relative h-8 w-36">
-              <Image
-                src="/text-logo.webp" // Ensure this file exists in public folder
-                alt="The Dev Vastra"
-                fill
-                className="object-contain object-left"
-                priority
-                unoptimized
-              />
-            </div>
           </Link>
 
-          {/* Right: Wishlist Icon with Badge */}
-          <Link href="/wishlist" className="relative p-1">
-            <Heart className="h-6 w-6 text-foreground/80" />
+          {/* 2. Center: Brand Text Image (Absolute Positioned) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
+            <Link href="/">
+              <div className="relative h-10 w-40">
+                <Image
+                  src="/text-logo.webp"
+                  alt="The Dev Vastra"
+                  fill
+                  className="object-contain"
+                  priority
+                  unoptimized
+                />
+              </div>
+            </Link>
+          </div>
+
+          {/* 3. Right: Wishlist Icon */}
+          <Link href="/wishlist" className="relative p-1 z-10">
+            <Heart className="h-7 w-7 text-foreground/80" />
             {wishlistCount > 0 && (
               <span className="absolute -top-1 -right-1 h-4 w-4 flex items-center justify-center rounded-full bg-primary text-[10px] text-white border-2 border-card font-bold">
                 {wishlistCount}
@@ -94,7 +95,7 @@ export function MobileNav({ user }: { user: any }) {
         </div>
       </div>
 
-      {/* Spacer for Top Bar content */}
+      {/* Spacer */}
       <div className="h-32" />
 
       {/* --- BOTTOM NAV (Floating Pill) --- */}
@@ -140,8 +141,6 @@ export function MobileNav({ user }: { user: any }) {
             )}
           >
             <ShoppingBag className="h-5 w-5" />
-
-            {/* ✅ Cart Badge with Number */}
             {cartCount > 0 && (
               <span className="absolute top-2 right-2 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-primary">
                 {cartCount}
