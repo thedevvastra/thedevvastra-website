@@ -2,9 +2,14 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Trash2, Edit, ImagePlus } from "lucide-react";
-import { BannerSheet } from "./banner-sheet"; // Ensure this path matches where you created the sheet
+import {
+  Trash2,
+  Edit,
+  ImagePlus,
+  Link as LinkIcon,
+  ExternalLink,
+} from "lucide-react";
+import { BannerSheet } from "./banner-sheet";
 import { AlertModal } from "@/components/modals/alert-modal";
 import { deleteSaleBanner } from "@/app/(admin)/admin/settings/sale-banner/actions";
 import { toast } from "sonner";
@@ -17,10 +22,16 @@ export function BannerClient({ banners }: { banners: any[] }) {
   const confirmDelete = async () => {
     if (!deleteId) return;
     setIsLoading(true);
-    await deleteSaleBanner(deleteId);
-    setIsLoading(false);
-    setDeleteOpen(false);
-    toast.success("Banner deleted successfully");
+    try {
+      await deleteSaleBanner(deleteId);
+      toast.success("Banner deleted successfully");
+      setDeleteOpen(false);
+      setDeleteId(null);
+    } catch (error) {
+      toast.error("Something went wrong");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -31,83 +42,81 @@ export function BannerClient({ banners }: { banners: any[] }) {
         onConfirm={confirmDelete}
         loading={isLoading}
         title="Delete Banner?"
-        description="This will remove the banner from the homepage."
+        description="This action cannot be undone."
       />
 
-      <div className="flex items-center justify-between mb-6">
+      {/* --- HEADER --- */}
+      <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Sale Banners</h1>
-          <p className="text-muted-foreground">
-            Manage portrait banners displayed on the homepage.
+          <h1 className="text-3xl font-bold tracking-tight">Sale Banners</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage your homepage portrait banners.
           </p>
         </div>
         <BannerSheet />
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* --- GRID LAYOUT --- */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {banners.length === 0 ? (
-          <div className="col-span-full p-10 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-muted-foreground bg-muted/20">
-            <ImagePlus className="h-10 w-10 mb-2 opacity-50" />
-            <p>No banners added yet.</p>
+          <div className="col-span-full py-16 flex flex-col items-center justify-center border-2 border-dashed rounded-xl bg-muted/10 text-muted-foreground">
+            <div className="bg-background p-4 rounded-full shadow-sm mb-4">
+              <ImagePlus className="h-8 w-8 opacity-50" />
+            </div>
+            <p>No banners active. Add one to get started.</p>
           </div>
         ) : (
           banners.map((banner) => (
-            <Card
+            <div
               key={banner.id}
-              className="group relative overflow-hidden flex flex-col hover:shadow-lg transition-all border-0 ring-1 ring-border"
+              className="group bg-card border rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300"
             >
-              {/* Image Preview (Portrait Aspect) */}
-              <div className="relative aspect-[3/4] bg-muted w-full">
+              {/* 1. IMAGE AREA (Rounded inside the padded box) */}
+              <div className="relative aspect-[3/4] w-full bg-muted rounded-xl overflow-hidden mb-4 border shadow-sm">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={banner.imageUrl}
                   alt="Banner"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
+              </div>
 
-                {/* Overlay Actions */}
-                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 backdrop-blur-sm rounded-lg p-1">
-                  <BannerSheet initialData={banner}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-white hover:text-white hover:bg-white/20"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </BannerSheet>
+              {/* 2. LINK INFO */}
+              <div className="flex items-center gap-2 mb-4 bg-muted/50 p-2 rounded-lg text-xs text-muted-foreground">
+                <LinkIcon className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate font-mono">
+                  {banner.ctaLink || "/"}
+                </span>
+                <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+              </div>
+
+              {/* 3. ACTION BUTTONS (Edit & Delete Side-by-Side) */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Edit Button */}
+                <BannerSheet initialData={banner}>
                   <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-white/20"
-                    onClick={() => {
-                      setDeleteId(banner.id);
-                      setDeleteOpen(true);
-                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full flex items-center gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5" /> Edit
                   </Button>
-                </div>
-              </div>
+                </BannerSheet>
 
-              {/* Info Section */}
-              <div className="p-4 bg-card">
-                <div className="mb-3">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-1">
-                    Button Preview
-                  </p>
-                  <div
-                    className="inline-block px-4 py-1.5 rounded-full text-white text-xs font-medium shadow-sm"
-                    style={{ backgroundColor: banner.btnColor }}
-                  >
-                    {banner.ctaText}
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  Link: {banner.ctaLink}
-                </p>
+                {/* Delete Button */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full flex items-center gap-2 text-red-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                  onClick={() => {
+                    setDeleteId(banner.id);
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> Delete
+                </Button>
               </div>
-            </Card>
+            </div>
           ))
         )}
       </div>

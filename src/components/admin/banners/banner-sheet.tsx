@@ -8,9 +8,7 @@ import {
   Loader2,
   Save,
   Upload,
-  Palette,
   Link as LinkIcon,
-  Type,
   ImagePlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,11 +22,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   createSaleBanner,
   updateSaleBanner,
@@ -50,30 +43,25 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
   const { register, handleSubmit, reset, setValue, watch } = useForm({
     defaultValues: initialData || {
       imageUrl: "",
-      ctaText: "Shop Now",
-      ctaLink: "/category/sale",
+      ctaLink: "/",
+      // Hidden defaults for DB compatibility
+      ctaText: "",
       btnColor: "#000000",
     },
   });
 
-  // Reset form on open/edit
   useEffect(() => {
     if (initialData && open) {
       reset(initialData);
     } else if (!initialData && open) {
       reset({
         imageUrl: "",
-        ctaText: "Shop Now",
-        ctaLink: "/category/sale",
-        btnColor: "#000000",
+        ctaLink: "/",
       });
     }
   }, [initialData, reset, open]);
 
-  // Watchers for Real-time Preview
   const watchedImage = watch("imageUrl");
-  const watchedColor = watch("btnColor");
-  const watchedText = watch("ctaText");
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -81,9 +69,7 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
 
     setUploading(true);
     try {
-      // Unique filename
       const fileName = `bnr-${Date.now()}-${file.name.replace(/\s/g, "")}`;
-
       const { error } = await supabase.storage
         .from("banners")
         .upload(fileName, file);
@@ -91,12 +77,10 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
 
       const { data } = supabase.storage.from("banners").getPublicUrl(fileName);
       setValue("imageUrl", data.publicUrl);
-      toast.success("Image uploaded successfully!");
+      toast.success("Image uploaded!");
     } catch (error) {
       console.error(error);
-      toast.error(
-        "Upload failed. Make sure 'banners' bucket exists and is Public.",
-      );
+      toast.error("Upload failed");
     } finally {
       setUploading(false);
     }
@@ -105,10 +89,14 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
   const onSubmit = async (data: any) => {
     setIsLoading(true);
     let res;
+
+    // Ensure hidden fields have fallback values
+    const payload = { ...data, ctaText: "Shop", btnColor: "#000" };
+
     if (initialData) {
-      res = await updateSaleBanner(initialData.id, data);
+      res = await updateSaleBanner(initialData.id, payload);
     } else {
-      res = await createSaleBanner(data);
+      res = await createSaleBanner(payload);
     }
     setIsLoading(false);
 
@@ -131,31 +119,28 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
         )}
       </SheetTrigger>
 
-      {/* ✅ UI FIX: Bottom Sheet with Rounded Corners */}
       <SheetContent
         side="bottom"
-        className="h-[90vh] sm:max-w-2xl mx-auto rounded-t-[2rem] overflow-hidden flex flex-col p-0 bg-background/95 backdrop-blur-xl border-t shadow-2xl"
+        className="h-[85vh] sm:max-w-2xl mx-auto rounded-t-[2rem] overflow-hidden flex flex-col p-0 bg-background/95 backdrop-blur-xl border-t shadow-2xl"
       >
-        {/* Header */}
         <div className="px-8 py-6 border-b bg-muted/20">
           <SheetHeader>
             <SheetTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               {initialData ? "Edit Sale Banner" : "New Sale Banner"}
             </SheetTitle>
             <SheetDescription>
-              Create a visually appealing portrait banner for your mobile users.
+              Upload an image (Portrait 3:4) and set the link.
             </SheetDescription>
           </SheetHeader>
         </div>
 
-        {/* Scrollable Body */}
         <div className="flex-1 overflow-y-auto px-8 py-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-20">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* --- Left Column: Image Upload --- */}
+              {/* --- Image Upload --- */}
               <div className="space-y-3">
                 <Label className="flex items-center gap-2 text-primary font-semibold">
-                  <ImagePlus className="h-4 w-4" /> Banner Image (Portrait)
+                  <ImagePlus className="h-4 w-4" /> Banner Image
                 </Label>
 
                 <div
@@ -197,7 +182,7 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
                         Click to upload image
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Recommended ratio 3:4 (Vertical)
+                        Ratio 3:4 (Portrait)
                       </p>
                     </div>
                   )}
@@ -210,100 +195,25 @@ export function BannerSheet({ initialData, children }: BannerSheetProps) {
                 </div>
               </div>
 
-              {/* --- Right Column: Details & Preview --- */}
+              {/* --- Link Input --- */}
               <div className="space-y-6">
-                {/* CTA Text */}
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
-                    <Type className="h-4 w-4 text-muted-foreground" /> Button
-                    Text
-                  </Label>
-                  <Input
-                    {...register("ctaText")}
-                    placeholder="Shop Now"
-                    className="h-11"
-                  />
-                </div>
-
-                {/* Link */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <LinkIcon className="h-4 w-4 text-muted-foreground" />{" "}
-                    Redirect Link
+                    <LinkIcon className="h-4 w-4 text-muted-foreground" />
+                    Destination Link
                   </Label>
                   <Input
                     {...register("ctaLink")}
                     placeholder="/category/sale"
                     className="h-11 font-mono text-sm"
                   />
-                </div>
-
-                {/* Color Picker */}
-                <div className="space-y-2">
-                  <Label className="flex items-center gap-2">
-                    <Palette className="h-4 w-4 text-muted-foreground" /> Button
-                    Color
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full h-12 justify-between px-3 border-dashed hover:border-solid"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className="w-6 h-6 rounded-full border shadow-sm ring-2 ring-white"
-                            style={{ backgroundColor: watchedColor }}
-                          />
-                          <span className="font-mono text-xs text-muted-foreground">
-                            {watchedColor}
-                          </span>
-                        </div>
-                        <span className="text-xs text-primary font-medium">
-                          Pick Color
-                        </span>
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-3" align="start">
-                      <Label className="mb-2 block text-xs font-medium text-muted-foreground">
-                        Select Hex Color
-                      </Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="color"
-                          {...register("btnColor")}
-                          className="h-10 w-10 p-0.5 rounded-md cursor-pointer border-0"
-                        />
-                        <Input
-                          {...register("btnColor")}
-                          placeholder="#000000"
-                          className="flex-1 uppercase font-mono"
-                          maxLength={7}
-                        />
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Live Preview Box */}
-                <div className="pt-4 mt-4 border-t">
-                  <Label className="text-xs text-muted-foreground uppercase tracking-wider mb-3 block">
-                    Live Button Preview
-                  </Label>
-                  <div className="bg-muted/30 p-6 rounded-xl flex items-center justify-center border border-dashed">
-                    <button
-                      type="button"
-                      className="px-8 py-3 rounded-full text-white font-bold text-sm tracking-wide shadow-lg transform transition-all hover:scale-105 active:scale-95"
-                      style={{ backgroundColor: watchedColor }}
-                    >
-                      {watchedText || "Button Text"}
-                    </button>
-                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Where should the user go when clicking this banner?
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Sticky Footer Action */}
             <div className="flex justify-end pt-4">
               <Button
                 type="submit"
