@@ -5,6 +5,8 @@ import { heroSlides } from "@/db/schema";
 import { revalidatePath } from "next/cache";
 import { eq } from "drizzle-orm";
 
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+
 // 1. Create
 export async function createHeroSlide(data: any) {
   try {
