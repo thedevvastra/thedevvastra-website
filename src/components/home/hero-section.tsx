@@ -10,22 +10,23 @@ import Link from "next/link";
 export function HeroSection({ slides }: { slides: any[] }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // ✅ FIX: useEffect called before early return
+  // ✅ FIX: useEffect ko 'if' condition se upar move kiya
   useEffect(() => {
+    // Guard clause: Agar slides nahi hai to kuch mat karo
     if (!slides || slides.length === 0) return;
 
     const interval = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % slides.length);
     }, 5000);
-    return () => clearInterval(interval);
-  }, [activeIndex, slides]);
 
-  // ✅ Check after hooks
+    return () => clearInterval(interval);
+  }, [activeIndex, slides]); // dependency array update kiya
+
+  // ✅ FIX: Ab check karo aur return null karo (Hooks ke baad)
   if (!slides || slides.length === 0) return null;
 
   return (
     <section className="w-full py-4 md:py-6 overflow-hidden bg-background">
-      {/* Height adjusted for banner look */}
       <div className="container mx-auto px-4 h-[180px] md:h-[400px] flex gap-4">
         {slides.map((slide, index) => {
           const isActive = index === activeIndex;
@@ -38,19 +39,18 @@ export function HeroSection({ slides }: { slides: any[] }) {
               onClick={() => setActiveIndex(index)}
               initial={{ borderRadius: "1rem" }}
               animate={{
-                flex: isActive ? 2 : 0.5, // Active slide takes more space
+                flex: isActive ? 2 : 0.5,
                 opacity: isActive || isNext ? 1 : 0.5,
               }}
               transition={{ type: "spring", stiffness: 100, damping: 20 }}
               className={cn(
                 "relative h-full rounded-2xl overflow-hidden shadow-sm border border-border/50",
-                !isActive && "hidden md:block cursor-pointer", // Click side slides to navigate
+                !isActive && "hidden md:block cursor-pointer",
                 isActive && "cursor-default",
               )}
             >
               {slide.imageUrl && (
                 <>
-                  {/* ✅ Link only active on the main slide */}
                   {isActive ? (
                     <Link
                       href={slide.ctaLink || "/"}
@@ -64,7 +64,6 @@ export function HeroSection({ slides }: { slides: any[] }) {
                       />
                     </Link>
                   ) : (
-                    // Inactive slides are just preview images
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={slide.imageUrl}
