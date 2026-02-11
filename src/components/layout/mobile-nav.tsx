@@ -58,7 +58,7 @@ export function MobileNav({ user }: { user: any }) {
           {/* 2. Center: Brand Text Image (Absolute Positioned) */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
             <Link href="/">
-              <div className="relative h-10 w-40">
+              <div className="relative h-12 w-48">
                 <Image
                   src="/text-logo.webp"
                   alt="The Dev Vastra"
