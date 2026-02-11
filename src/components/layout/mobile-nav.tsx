@@ -43,13 +43,13 @@ export function MobileNav({ user }: { user: any }) {
         <div className="relative flex items-center justify-between mb-3">
           {/* 1. Left: Round Logo Only */}
           <Link href="/" className="shrink-0 z-10">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-white shadow-sm">
+            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20 flex items-center justify-center bg-[#fbebdc] shadow-sm">
               <Image
-                src="/logo.webp"
+                src="/logo-v2.webp"
                 alt="Logo"
                 width={56}
                 height={56}
-                className="object-contain"
+                className="object-center"
                 priority
               />
             </div>
@@ -99,8 +99,8 @@ export function MobileNav({ user }: { user: any }) {
       <div className="h-32" />
 
       {/* --- BOTTOM NAV (Floating Pill) --- */}
-      <div className="fixed bottom-6 left-4 right-4 z-50">
-        <div className="bg-primary text-primary-foreground backdrop-blur-lg shadow-2xl rounded-full h-16 flex items-center justify-around px-2 border border-primary/20">
+      <div className="fixed bottom-6 left-12 right-12 z-50">
+        <div className="bg-primary text-primary-foreground backdrop-blur-lg shadow-2xl rounded-full h-16 flex items-center justify-between px-2 border border-primary/20">
           <Link
             href="/"
             className={cn(

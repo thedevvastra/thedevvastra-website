@@ -63,7 +63,7 @@ export function DesktopNav({ user, categories }: DesktopNavProps) {
           {/* Round Icon Logo */}
           <div className="relative h-12 w-12 overflow-hidden rounded-full border border-primary/20">
             <Image
-              src="/logo.webp?v=2"
+              src="/logo-v2.webp?v=2"
               alt="Logo"
               width={48}
               height={48}
