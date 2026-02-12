@@ -38,7 +38,7 @@ export default function PrivacyPolicyPage() {
               1. Introduction
             </h2>
             <p>
-              At <strong>The Dev Vastra</strong> (thedevvastra.in), we value the
+              At <strong>The Dev Vastra</strong> (thedevvastra.com), we value the
               trust you place in us. That's why we insist upon the highest
               standards for secure transactions and customer information
               privacy. This policy describes how we collect, use, and share

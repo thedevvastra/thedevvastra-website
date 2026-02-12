@@ -38,7 +38,7 @@ export default function TermsConditionsPage() {
             </h2>
             <p>
               The Dev Vastra ("we", "us", "our") operates the website{" "}
-              <strong>thedevvastra.in</strong>. By visiting our site and/or
+              <strong>thedevvastra.com</strong>. By visiting our site and/or
               purchasing something from us, you engage in our "Service" and
               agree to be bound by the following terms and conditions. These
               terms apply to all users of the site, including browsers, vendors,

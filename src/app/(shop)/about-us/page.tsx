@@ -342,7 +342,7 @@ export default function AboutUsPage() {
           </blockquote>
 
           <div className="mt-6 flex flex-col items-center">
-            <div className="font-bold text-sm">The Founders</div>
+            <div className="font-bold text-sm">The Founder</div>
             <div className="text-xs opacity-75">Devesh Sisodiya</div>
           </div>
         </div>
