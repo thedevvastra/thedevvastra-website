@@ -16,13 +16,19 @@ const nextConfig: NextConfig = {
     ],
   },
 
+  // ✅ FIX: Increase body size limit for large image uploads via Server Actions
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "50mb",
+    },
+  },
+
   // ✅ Build Errors Ignore karne ke liye
   typescript: {
     ignoreBuildErrors: true,
   },
 
-  // ✅ FIX: TypeScript error hatane ke liye '@ts-expect-error' lagaya hai
-  // @ts-expect-error - ESLint is valid in config but types might be mismatching
+  // ✅ ESLint Ignore
   eslint: {
     ignoreDuringBuilds: true,
   },
