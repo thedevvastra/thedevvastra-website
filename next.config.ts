@@ -15,23 +15,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-
-  // ✅ FIX: Increase body size limit for large image uploads via Server Actions
   experimental: {
     serverActions: {
       bodySizeLimit: "50mb",
     },
   },
-
-  // ✅ Build Errors Ignore karne ke liye
   typescript: {
     ignoreBuildErrors: true,
   },
-
-  // ✅ ESLint Ignore
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // ✅ REMOVED the 'eslint' block to fix the Vercel warning
 };
 
 export default nextConfig;
