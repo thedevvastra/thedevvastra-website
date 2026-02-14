@@ -44,7 +44,7 @@ export const metadata: Metadata = {
     siteName: "The Dev Vastra",
     images: [
       {
-        url: "/logo-v2.webp", // Public folder wali image (metadataBase isko absolute link bana dega)
+        url: "/open-graph.webp", // Public folder wali image (metadataBase isko absolute link bana dega)
         width: 1200, // WhatsApp bade banner ke liye 1200x630 best maanta hai
         height: 630,
         alt: "The Dev Vastra Logo",
@@ -65,6 +65,10 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
+  },
+
+  verification: {
+    google: "Or2HblyaGJZYmrGF7d01wbVJ5qt13CowMxVKOp9oOUk", // Sirf code dalna hai, pura meta tag nahi
   },
 };
 
