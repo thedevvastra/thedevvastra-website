@@ -26,28 +26,23 @@ export default async function Home() {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
 
-  // Parallel Fetching
-  const [
-    slides,
-    announcements,
-    settings,
-    categories,
-    deals,
-    banners,
-    latestProducts,
-    wishlistIds,
-    mostSellingProducts,
-  ] = await Promise.all([
+  // ✅ BATCH 1: Fetch Core UI & Settings (Low load on Database)
+  const [slides, announcements, settings, categories] = await Promise.all([
     db.select().from(heroSlides).orderBy(desc(heroSlides.createdAt)),
     db.select().from(marqueeItems).orderBy(desc(marqueeItems.createdAt)),
     db.select().from(storeSettings).where(eq(storeSettings.id, 1)),
     getMainCategories(),
-    getTodaysDealsForUser(),
-    getSaleBanners(),
-    getLatestProducts(),
-    getUserWishlistIds(),
-    getMostSellingProducts(18),
   ]);
+
+  // ✅ BATCH 2: Fetch Products & Deals (Heavy queries run safely after Batch 1)
+  const [deals, banners, latestProducts, wishlistIds, mostSellingProducts] =
+    await Promise.all([
+      getTodaysDealsForUser(),
+      getSaleBanners(),
+      getLatestProducts(),
+      getUserWishlistIds(),
+      getMostSellingProducts(18),
+    ]);
 
   const showMarquee = settings.length > 0 ? settings[0].isMarqueeEnabled : true;
 
