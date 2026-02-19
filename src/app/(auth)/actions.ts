@@ -7,6 +7,8 @@ import { count } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 // 1. Helper: Check if First User
 async function checkIsFirstUser() {
   const [result] = await db.select({ count: count() }).from(profiles);
@@ -92,4 +94,22 @@ export async function loginWithGoogle() {
 
   if (error) return { error: error.message };
   if (data.url) redirect(data.url);
+}
+
+// ✅ 5. Forgot Password Action (New)
+export async function forgotPasswordAction(email: string) {
+  const supabase = await createClient();
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/auth/update-password`, // You will need to create this page later to handle the new password input
+    });
+
+    if (error) return { error: error.message };
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: "Failed to send reset email." };
+  }
 }

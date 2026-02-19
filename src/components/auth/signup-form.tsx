@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Phone, User, Mail, Lock } from "lucide-react";
+import { Loader2, Phone, User, Mail, Lock, Eye, EyeOff } from "lucide-react"; // ✅ Added Icons
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -23,6 +23,7 @@ const signupSchema = z.object({
 
 export function SignupForm() {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // ✅ Show/Hide State
   const router = useRouter();
 
   const {
@@ -37,6 +38,9 @@ export function SignupForm() {
     setIsLoading(true);
     const loadingToast = toast.loading("Creating account...");
 
+    // ✅ On Signup, we can assume they used Email method
+    localStorage.setItem("lastLoginMethod", "email");
+
     const res = await signupAction(data);
 
     if (res.error) {
@@ -47,7 +51,6 @@ export function SignupForm() {
       toast.dismiss(loadingToast);
       toast.success("Welcome! Account created successfully.");
 
-      // ✅ FIX: Mobile Redirect Logic
       router.refresh();
       setTimeout(() => {
         router.replace("/");
@@ -60,7 +63,7 @@ export function SignupForm() {
       onSubmit={handleSubmit(onSubmit)}
       className="space-y-4 animate-in fade-in slide-in-from-bottom-2"
     >
-      {/* Full Name */}
+      {/* Full Name (Same as before) */}
       <div className="space-y-2">
         <Label htmlFor="fullName">Full Name</Label>
         <div className="relative">
@@ -78,7 +81,7 @@ export function SignupForm() {
         )}
       </div>
 
-      {/* Email */}
+      {/* Email (Same as before) */}
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <div className="relative">
@@ -97,7 +100,7 @@ export function SignupForm() {
         )}
       </div>
 
-      {/* Mobile */}
+      {/* Mobile (Same as before) */}
       <div className="space-y-2">
         <Label htmlFor="phone">Mobile Number</Label>
         <div className="relative">
@@ -116,7 +119,7 @@ export function SignupForm() {
         )}
       </div>
 
-      {/* Password */}
+      {/* Password with Eye Icon */}
       <div className="space-y-2">
         <Label htmlFor="password">Password</Label>
         <div className="relative">
@@ -124,11 +127,23 @@ export function SignupForm() {
           <Input
             {...register("password")}
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"} // ✅ Toggle
             placeholder="******"
-            className="pl-9 h-10"
+            className="pl-9 pr-10 h-10" // Added PR-10 for space
             disabled={isLoading}
           />
+          {/* ✅ Eye Icon */}
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-2.5 text-muted-foreground hover:text-foreground"
+          >
+            {showPassword ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+          </button>
         </div>
         {errors.password && (
           <p className="text-xs text-red-500">{errors.password.message}</p>
