@@ -114,7 +114,7 @@ export async function forgotPasswordAction(email: string) {
   }
 }
 
-// ✅ 6. Update Password Action (New)
+// ✅ 6. Update Password Action
 export async function updatePasswordAction(formData: FormData) {
   const supabase = await createClient();
   const password = formData.get("password") as string;
