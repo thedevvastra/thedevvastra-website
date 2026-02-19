@@ -113,3 +113,36 @@ export async function forgotPasswordAction(email: string) {
     return { error: "Failed to send reset email." };
   }
 }
+
+// ✅ 6. Update Password Action (New)
+export async function updatePasswordAction(formData: FormData) {
+  const supabase = await createClient();
+  const password = formData.get("password") as string;
+  const code = formData.get("code") as string;
+
+  if (!password || !code) {
+    return { error: "Missing required fields." };
+  }
+
+  try {
+    // 1. Code ko Session mein exchange karo
+    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (sessionError) {
+      return { error: "Link expired or invalid. Try resetting again." };
+    }
+
+    // 2. User ka password update karo
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: password,
+    });
+
+    if (updateError) {
+      return { error: updateError.message };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    return { error: "Something went wrong. Please try again." };
+  }
+}
