@@ -10,7 +10,6 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  // ✅ FIX: metadataBase add kiya. Ye WhatsApp ko image dhoondhne mein madad karta hai.
   metadataBase: new URL("https://thedevvastra.com"),
 
   title: {
@@ -33,7 +32,6 @@ export const metadata: Metadata = {
   creator: "The Dev Vastra",
   publisher: "The Dev Vastra",
 
-  // ✅ FIX: OpenGraph setup for WhatsApp, Facebook, LinkedIn
   openGraph: {
     type: "website",
     locale: "en_IN",

@@ -58,7 +58,7 @@ export default function AboutUsPage() {
           <div className="relative group">
             <div className="relative h-[300px] md:h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-border/50 bg-muted">
               <Image
-                src="/about-us-image.webp"
+                src="/about-us-imag.webp"
                 alt="Our Studio"
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -343,7 +343,7 @@ export default function AboutUsPage() {
 
           <div className="mt-6 flex flex-col items-center">
             <div className="font-bold text-sm">The Founder</div>
-            <div className="text-xs opacity-75">Devesh Sisodiya</div>
+            <div className="text-xs opacity-75">Sakshi</div>
           </div>
         </div>
       </section>
